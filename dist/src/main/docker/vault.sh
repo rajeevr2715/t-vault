@@ -1,28 +1,28 @@
 #! /bin/bash
 #set -x
-# =========================================================================		
+# =========================================================================
 # Copyright 2019 T-Mobile, US
-# 		
-# Licensed under the Apache License, Version 2.0 (the "License");		
-# you may not use this file except in compliance with the License.		
-# You may obtain a copy of the License at		
-#		
-#    http://www.apache.org/licenses/LICENSE-2.0		
-#		
-# Unless required by applicable law or agreed to in writing, software		
-# distributed under the License is distributed on an "AS IS" BASIS,		
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.		
-# See the License for the specific language governing permissions and		
-# limitations under the License.		
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # See the readme.txt file for additional language around disclaimer of warranties.
-# =========================================================================		
+# =========================================================================
 
 ###############################################################################
 # Author @vvaradh
 # Date 08/10/2017
 # Updated Date: 12/10/2017
 # This script covers both interactive and silent mode installation. For silent
-# mode we need to pass a flat file named parameters and specify it under 
+# mode we need to pass a flat file named parameters and specify it under
 # source part in the script
 ###############################################################################
 source /tmp/parameter
@@ -47,7 +47,7 @@ case $BACKEND in
     fi
     ;;
   "File System")
-    ;;    
+    ;;
   *) echo Invalid option in Backend;;
 esac
 
@@ -65,7 +65,7 @@ esac
 #####################################################################################
 
 if [[ $EUID -ne 0 ]]; then
-  echo "This script must be run as root" 
+  echo "This script must be run as root"
   exit 1
 fi
 
@@ -146,10 +146,10 @@ function valid_ip()
 }
 
 # Helper to extract and write the vault key
-function getkey() 
-{ 
-  key="^Unseal Key $1"; 
-  cat /opt/tvault/hcorp/vault.init  | grep "$key" | awk '{print $4}'  
+function getkey()
+{
+  key="^Unseal Key $1";
+  cat /opt/tvault/hcorp/vault.init  | grep "$key" | awk '{print $4}'
 }
 
 # Helper to validate the inputs
@@ -202,11 +202,11 @@ function genselfcert()
     return 1
   fi
 
-  IP=$(hostname -I | cut -d' ' -f1)
+  IP=0.0.0.0
 
-  if valid_ip $IP; then 
+  if valid_ip $IP; then
     echo "IP.1 = $IP" >> $2
-  else 
+  else
     echo "Unable to determine IP address. Exiting ..."
   exit 1
   fi
@@ -228,11 +228,11 @@ SSCRED_FILE_LOCATION="/opt/tvault/hcorp"
 
 VCONF="$VHOME/hcorp/conf/vault.conf"
 
-IP=$(hostname -I | cut -d' ' -f1)
+IP=0.0.0.0
 
-if valid_ip $IP; then 
+if valid_ip $IP; then
   echo "IP address is : $IP"
-else 
+else
   echo "Unable to determine IP address. Exiting ..."
 exit 1
 fi
@@ -241,7 +241,7 @@ VSERVERCONF=$VHOME/hcorp/conf/server.hcl
 
 if [[ $HOST == "" ]]; then
    redirect_addr="https://"$IP":8200"
-else 
+else
    redirect_addr="https://"$HOST":$PORT1"
 fi
 
@@ -277,7 +277,7 @@ case $BACKEND in
       VSERVERCONF="$VHOME/hcorp/conf/server_consul.hcl"
       echo "vserverconf=$VHOME/hcorp/conf/server_consul.hcl" >> $VCONF
 	  sed -i 's/CONSUL_STORAGE_ADDRESS/'"$CONSUL_STORAGE_ADDRESS"'/; s#CONSUL_STORAGE_PATH#'"$CONSUL_STORAGE_PATH"'#; s/CONSUL_STORAGE_SERVICE_NAME/'"$CONSUL_STORAGE_SERVICE_NAME"'/;' $VHOME/hcorp/conf/server_consul.hcl
-      #break         
+      #break
       ;;
 
     *) echo Invalid option;;
@@ -335,9 +335,10 @@ echo "Path is $PATH"
 export VAULT_ADDR="https://127.0.0.1:8200"
 export SSCRED_FILE_LOCATION="/opt/tvault/hcorp"
 
-#sudo setcap cap_ipc_lock=+ep $(readlink -f $(which vault)) 
-sudo setcap cap_ipc_lock=+ep $VHOME/hcorp/bin/vault
-#vault server -config=$VSERVERCONF >> $VLOG/tvault-vault-server.log &
+#sudo setcap cap_ipc_lock=+ep $(readlink -f $(which vault))
+sudo setcap cap_ipc_lock=ep $VHOME/hcorp/bin/vault
+sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
+vault server -config=$VSERVERCONF >> $VLOG/tvault-vault-server.log &
 
 echo "Vault server starting... "
 service tvault start >> $INSTLOG
@@ -377,13 +378,16 @@ if [[ -z "$initstat" ]]; then
   echo "Initializing Vault..."
   echo "This only happens once when the server is started against a new backend that has never been used with Vault before."
   echo "During initialization, the encryption keys are generated and 5 unseal keys are created."
-
+  sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
   vault operator init 1> $VHOME/hcorp/vault.init 2>> $INSTLOG
 
   sleep 2
   echo "Unsealing Vault"
+  sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
   vault operator  unseal  $(getkey 1) >> $INSTLOG
+  sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
   vault operator  unseal  $(getkey 2) >> $INSTLOG
+  sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
   vault operator  unseal  $(getkey 3) >> $INSTLOG
 
 ################################################################################
@@ -403,7 +407,7 @@ if [[ -z "$initstat" ]]; then
   else
     echo "Vault is in sealed state. Retrying ..."
   fi
-  
+
   n=$[$n+1]
   sleep 5
   done
@@ -427,7 +431,7 @@ if [[ -z "$initstat" ]]; then
   vault secrets enable -path=shared generic >> $INSTLOG
   vault secrets enable -path=metadata generic >> $INSTLOG
 
-  echo "Configuring the Authentication Backend [$AUTH_BACKEND]..." 
+  echo "Configuring the Authentication Backend [$AUTH_BACKEND]..."
   if [[ "$AUTH_BACKEND" == "ldap" ]]; then
      # LDAP...
      echo "Enabling/Configuring LDAP auth..."
@@ -436,7 +440,7 @@ if [[ -z "$initstat" ]]; then
      if [[ "$USE_UPNDOMAIN" == "yes" ]]; then
         echo "Using UPN Domain:"
         vault write auth/ldap/config url=$LDAP_URL  groupattr=$LDAP_GROUP_ATTR_NAME userattr=$LDAP_USR_ATTR_NAME  userdn=$USER_DN   groupdn=$GROUP_DN   insecure_tls=true starttls=$TLS_ENABLED upndomain=$UPN_DOMAIN_URL >> $INSTLOG
-     else 
+     else
         vault write auth/ldap/config url=$LDAP_URL  groupattr=$LDAP_GROUP_ATTR_NAME userattr=$LDAP_USR_ATTR_NAME  userdn=$USER_DN   groupdn=$GROUP_DN   binddn="$BIND_DN" bindpass="$BIND_DN_PASS" insecure_tls=true starttls=$TLS_ENABLED >> $INSTLOG
      fi
 
@@ -471,7 +475,7 @@ if [[ -z "$initstat" ]]; then
      vault auth enable aws >> $INSTLOG
      vault secrets tune -default-lease-ttl=15m /auth/aws >> $INSTLOG
   fi
-  
+
   # Enable APPROLE
   echo "Enabling APPROLE auth..."
   vault auth enable approle >> $INSTLOG
@@ -491,7 +495,7 @@ if [[ -z "$initstat" ]]; then
   fi
 
 ################################################################################
-# End - Vault Configuration                                               
+# End - Vault Configuration
 ################################################################################
 
 else
@@ -556,7 +560,7 @@ chkconfig tnginx on
 
 echo "Starting web server ... "
 systemctl enable tnginx.service
-service tnginx start 
+service tnginx start
 
 ################################################################################
 # End - Nginx start
