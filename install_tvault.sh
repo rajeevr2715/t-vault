@@ -3,7 +3,7 @@
 
 # =========================================================================
 # Copyright 2019 T-Mobile, US
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -33,4 +33,4 @@ chmod +x /tmp/vault.sh
 chmod +x /tmp/parameter
 
 #./vault.sh -s silent
-./vault.sh
+./vault.sh $1

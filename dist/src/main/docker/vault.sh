@@ -27,6 +27,7 @@
 ###############################################################################
 source /tmp/parameter
 
+admin_password=$1
 
 #####################################################################################
 #               Check availability of required parameters                           #
@@ -461,7 +462,7 @@ if [[ -z "$initstat" ]]; then
      vault policy write vaultadmin $VHOME/hcorp/conf/vaultadmin.json >> $INSTLOG
 
      echo "Assigning policies for safeadmin, vaultadmin for userpass auth..."
-     vault write auth/userpass/users/safeadmin password=safeadmin policies=safeadmin
+     vault write auth/userpass/users/safeadmin password=$admin_password policies=safeadmin
      vault write auth/userpass/users/vaultadmin password=vaultadmin policies=vaultadmin
 
      echo "Creating test users..."
