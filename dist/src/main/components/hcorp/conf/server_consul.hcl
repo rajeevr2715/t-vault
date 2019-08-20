@@ -9,4 +9,3 @@ listener "tcp" {
   tls_cert_file = "/opt/tvault/certs/tvault.crt"
   tls_key_file  = "/opt/tvault/certs/tvault.key"
 }
-

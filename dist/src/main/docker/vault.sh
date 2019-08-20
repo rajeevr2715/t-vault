@@ -28,7 +28,11 @@
 source /tmp/parameter
 
 admin_password=$1
-
+echo $admin_password
+echo $ADMIN_PASS
+echo ${ADMIN_PASS}
+echo $SKIP_SETCAP
+echo ${SKIP_SETCAP}
 #####################################################################################
 #               Check availability of required parameters                           #
 #####################################################################################
@@ -338,8 +342,10 @@ export SSCRED_FILE_LOCATION="/opt/tvault/hcorp"
 
 #sudo setcap cap_ipc_lock=+ep $(readlink -f $(which vault))
 sudo setcap cap_ipc_lock=ep $VHOME/hcorp/bin/vault
-sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
-vault server -config=$VSERVERCONF >> $VLOG/tvault-vault-server.log &
+if [[ "$SKIP_SETCAP" == "true" ]]; then
+  sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
+  vault server -config=$VSERVERCONF >> $VLOG/tvault-vault-server.log &
+fi
 
 echo "Vault server starting... "
 service tvault start >> $INSTLOG
@@ -379,16 +385,24 @@ if [[ -z "$initstat" ]]; then
   echo "Initializing Vault..."
   echo "This only happens once when the server is started against a new backend that has never been used with Vault before."
   echo "During initialization, the encryption keys are generated and 5 unseal keys are created."
-  sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
+  if [[ "$SKIP_SETCAP" == "true" ]]; then
+    sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
+  fi
   vault operator init 1> $VHOME/hcorp/vault.init 2>> $INSTLOG
 
   sleep 2
   echo "Unsealing Vault"
-  sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
+  if [[ "$SKIP_SETCAP" == "true" ]]; then
+    sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
+  fi
   vault operator  unseal  $(getkey 1) >> $INSTLOG
-  sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
+  if [[ "$SKIP_SETCAP" == "true" ]]; then
+    sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
+  fi
   vault operator  unseal  $(getkey 2) >> $INSTLOG
-  sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
+  if [[ "$SKIP_SETCAP" == "true" ]]; then
+    sudo setcap cap_ipc_lock=-ep $(readlink -f $(which vault))
+  fi
   vault operator  unseal  $(getkey 3) >> $INSTLOG
 
 ################################################################################
