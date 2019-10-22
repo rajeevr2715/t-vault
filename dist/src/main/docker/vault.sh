@@ -28,11 +28,8 @@
 source /tmp/parameter
 
 admin_password=$1
-echo $admin_password
-echo $ADMIN_PASS
-echo ${ADMIN_PASS}
-echo $SKIP_SETCAP
-echo ${SKIP_SETCAP}
+consul_address=$2
+echo $consul_address
 #####################################################################################
 #               Check availability of required parameters                           #
 #####################################################################################
@@ -281,7 +278,7 @@ case $BACKEND in
       createConsulConfigJson
       VSERVERCONF="$VHOME/hcorp/conf/server_consul.hcl"
       echo "vserverconf=$VHOME/hcorp/conf/server_consul.hcl" >> $VCONF
-	  sed -i 's/CONSUL_STORAGE_ADDRESS/'"$CONSUL_STORAGE_ADDRESS"'/; s#CONSUL_STORAGE_PATH#'"$CONSUL_STORAGE_PATH"'#; s/CONSUL_STORAGE_SERVICE_NAME/'"$CONSUL_STORAGE_SERVICE_NAME"'/;' $VHOME/hcorp/conf/server_consul.hcl
+	  sed -i 's/CONSUL_STORAGE_ADDRESS/'"$consul_address"'/; s#CONSUL_STORAGE_PATH#'"$CONSUL_STORAGE_PATH"'#; s/CONSUL_STORAGE_SERVICE_NAME/'"$CONSUL_STORAGE_SERVICE_NAME"'/;' $VHOME/hcorp/conf/server_consul.hcl
       #break
       ;;
 

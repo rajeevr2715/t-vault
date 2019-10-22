@@ -49,7 +49,7 @@ ENABLE_AWS=yes
 #                        Storage Backend                                 #
 ##########################################################################
 # The possible values are 'File System' or 'Consul'
-BACKEND='File System'
+BACKEND='Consul'
 
 
 ##########################################################################

@@ -33,4 +33,4 @@ chmod +x /tmp/vault.sh
 chmod +x /tmp/parameter
 
 #./vault.sh -s silent
-./vault.sh $1
+./vault.sh $1 $2
